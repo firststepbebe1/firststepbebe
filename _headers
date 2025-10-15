@@ -3,3 +3,9 @@
 
 /*
   Cache-Control: public, max-age=600
+
+/admin/*
+  Cache-Control: no-store
+
+/content/products.json
+  Cache-Control: no-store
