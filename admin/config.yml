@@ -1,4 +1,4 @@
-backend:
+﻿backend:
   name: git-gateway
   branch: main
 
@@ -21,9 +21,9 @@ collections:
             fields:
               - { label: "Titlu", name: "title", widget: "string" }
               - { label: "SKU", name: "sku", widget: "string" }
-              - { label: "Preț (TVA inclus)", name: "price", widget: "number", value_type: "float", min: 0 }
+              - { label: "Preț (TVA inclus)", name: "price", widget: "number" }
               - { label: "Se vinde doar la set de 10 bucăți", name: "pack10", widget: "boolean", default: true }
-              - { label: "Mărimi", name: "sizes", widget: "list", field: {label: "Mărime", name: "size", widget: "string"} }
-              - { label: "Culori", name: "colors", widget: "list", field: {label: "Culoare", name: "color", widget: "string"} }
-              - { label: "Imagini", name: "images", widget: "list", field: {label: "Imagine", name: "image", widget: "image"} }
-              - { label: "Descriere", name: "description", widget: "text", required: false }
+              - { label: "Mărimi", name: "sizes", widget: "list", field: { label: "Mărime", name: "size", widget: "string" } }
+              - { label: "Culori", name: "colors", widget: "list", field: { label: "Culoare", name: "color", widget: "string" } }
+              - { label: "Imagini", name: "images", widget: "list", field: { label: "Imagine", name: "image", widget: "image" } }
+              - { label: "Descriere", name: "description", widget: "text" }
