@@ -1,0 +1,10 @@
+{
+  "name": "first-step-bebe",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Static shop with Netlify Functions using Brevo SMTP",
+  "license": "UNLICENSED",
+  "dependencies": {
+    "nodemailer": "^6.9.8"
+  }
+}

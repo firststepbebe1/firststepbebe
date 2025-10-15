@@ -1,0 +1,19 @@
+[
+  {
+    "sku": "BODY-IMG-001",
+    "title": "Body bumbac (din poză)",
+    "price": 29.9,
+    "image": "/assets/img/logo.png",
+    "sizes": [
+      "56",
+      "62",
+      "68",
+      "74"
+    ],
+    "colors": [
+      "Alb"
+    ],
+    "stock": 100,
+    "category": "Body-uri"
+  }
+]

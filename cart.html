@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="ro">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Coș · First Step Bebe</title>
+<style>
+*{box-sizing:border-box} body{margin:0;font-family:Arial, sans-serif;background:#fffaf6;color:#463d3d}
+.header{position:sticky;top:0;z-index:5;display:flex;justify-content:space-between;align-items:center;padding:12px 16px;background:#fff;box-shadow:0 10px 24px rgba(0,0,0,.08)}
+.h1{margin:0;font-size:18px}
+.container{padding:12px 16px}
+.cart-item{display:flex;gap:12px;align-items:center;padding:12px 0;border-bottom:1px solid #eee}
+.cart-item img{width:64px;height:64px;object-fit:cover;border-radius:10px;background:#f4f0ec}
+.grow{flex:1}
+.iconbtn{border:none;background:#f1efff;color:#6c63ff;width:28px;height:28px;border-radius:8px;cursor:pointer;font-weight:800}
+.line{display:flex;justify-content:space-between;margin:6px 0}
+.line.total{font-size:18px;font-weight:800}
+.badge{display:inline-block;font-size:12px;color:#555;background:#f3eefc;border-radius:999px;padding:4px 10px;margin-right:8px}
+.btn{background:#6c63ff;color:#fff;border:none;border-radius:12px;padding:10px 12px;font-weight:600;cursor:pointer}
+.btn.whats{background:#25D366;color:#0b3b22;text-decoration:none}
+.note{color:#8c7f7f;font-size:12px}
+.checkout-fields{display:grid;gap:10px;margin-top:8px}
+.checkout-fields label{font-size:12px;color:#8c7f7f}
+.checkout-fields input{width:100%;padding:10px;border-radius:10px;border:1px solid #e6e1ff;font-family:inherit}
+.status{margin-top:6px;font-size:13px}
+</style>
+</head>
+<body>
+  <header class="header">
+    <strong class="h1">Coș de cumpărături</strong>
+    <button id="closeBtn" class="btn" title="Închide">Închide</button>
+  </header>
+  <div class="container">
+    <div id="cartItems"></div>
+    <div class="cart-summary">
+      <div class="line"><span>Subtotal</span><span id="subtotal">0 lei</span></div>
+      <div class="line"><span>TVA</span><span>Inclus în preț</span></div>
+      <div class="line total"><span>Total de plată</span><span id="grandTotal">0 lei</span></div>
+      <p class="note">* Prețurile includ TVA · Fiecare produs: 10 bucăți pe set</p>
+    </div>
+
+    <div class="checkout-fields">
+      <h4>Detalii livrare</h4>
+      <label>Nume complet<br/><input id="checkoutName" type="text" placeholder="Nume și prenume" required/></label>
+      <label>Nume firmă (opțional)<br/><input id="checkoutCompany" type="text" placeholder="Numele firmei (dacă există)"/></label>
+      <label>Telefon<br/><input id="checkoutPhone" type="tel" placeholder="07xxxxxxxx" required/></label>
+      <label>Adresă<br/><input id="checkoutAddress" type="text" placeholder="Str., nr., oraș" required/></label>
+    </div>
+
+    <div class="actions" style="display:flex;gap:10px;margin-top:12px;flex-wrap:wrap">
+      <a id="whatsappBtn" class="btn whats" target="_blank" rel="noopener">Comandă pe WhatsApp</a>
+      <button id="emailBtn" class="btn">Trimite comanda pe email</button>
+      <div id="emailStatus" class="status"></div>
+    </div>
+  </div>
+
+<script>
+const LS_CART='fsb_cart';
+let cart = JSON.parse(localStorage.getItem(LS_CART) || '[]');
+const $ = q => document.querySelector(q);
+const money = x => (Math.round(x*100)/100).toFixed(2).replace('.00','') + ' lei';
+
+function renderCart(){
+  const list = $('#cartItems'); list.innerHTML='';
+  if(cart.length===0){ list.innerHTML='<p>Coșul este gol.</p>'; }
+  cart.forEach((item,idx)=>{
+    const row = document.createElement('div'); row.className='cart-item';
+    const placeholder='data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw==';
+    row.innerHTML = `
+      <img src="${item.image || placeholder}" loading="lazy" alt="${item.name}"/>
+      <div class="grow">
+        <div><strong>${item.name}</strong></div>
+        <div class="note">10 bucăți pe set · TVA inclus</div>
+        <div class="qty">
+          <button class="iconbtn" data-act="dec" data-idx="${idx}" aria-label="Scade cantitatea pentru ${item.name}">−</button>
+          <span>${item.qty}</span>
+          <button class="iconbtn" data-act="inc" data-idx="${idx}" aria-label="Crește cantitatea pentru ${item.name}">+</button>
+        </div>
+      </div>
+      <div>${money(item.price*item.qty)}</div>
+      <button class="iconbtn" data-act="del" data-idx="${idx}" aria-label="Șterge ${item.name} din coș">x</button>`;
+    list.appendChild(row);
+  });
+  list.onclick = (e)=>{
+    const b=e.target.closest('.iconbtn'); if(!b) return;
+    const i=+b.dataset.idx; const act=b.dataset.act;
+    if(act==='inc') cart[i].qty+=1;
+    if(act==='dec') cart[i].qty=Math.max(1,cart[i].qty-1);
+    if(act==='del') cart.splice(i,1);
+    localStorage.setItem(LS_CART, JSON.stringify(cart)); renderCart();
+  };
+  const subtotal = cart.reduce((s,x)=>s+x.price*x.qty,0);
+  $('#subtotal').textContent = money(subtotal);
+  $('#grandTotal').textContent = money(subtotal);
+
+  const lines = cart.map(x=>`• ${x.name} — ${money(x.price)} x ${x.qty} = ${money(x.price*x.qty)}`);
+  const waMsg = encodeURIComponent(`Bună! Vreau să plasez o comandă:\n`+lines.join('\n')+`\nTotal: ${money(subtotal)}`);
+  $('#whatsappBtn').setAttribute('href', `https://wa.me/40731564284?text=${waMsg}`);
+}
+
+// Optional: EmailJS din fereastra pop-up (dacă dorești să trimiți din aici)
+const CFG = (window.APP_CONFIG||{});
+const EMAILJS_PUBLIC_KEY = (CFG.EMAILJS_PUBLIC_KEY||"");
+const EMAILJS_SERVICE_ID = (CFG.EMAILJS_SERVICE_ID||"");
+const EMAILJS_TEMPLATE_ID = (CFG.EMAILJS_TEMPLATE_ID||"");
+function loadEmailJSSDK(){
+  return new Promise((resolve,reject)=>{
+    if(window.emailjs) return resolve();
+    const s=document.createElement('script'); s.src='https://cdn.emailjs.com/dist/email.min.js';
+    s.onload=()=>{ emailjs.init(EMAILJS_PUBLIC_KEY); resolve(); };
+    s.onerror=reject; document.head.appendChild(s);
+  });
+}
+async function sendOrderViaEmailJS(){
+  const name    = document.getElementById('checkoutName').value.trim();
+  const company = (document.getElementById('checkoutCompany')?.value || '').trim();
+  const phone   = document.getElementById('checkoutPhone').value.trim();
+  const address = document.getElementById('checkoutAddress').value.trim();
+  const status  = document.getElementById('emailStatus');
+  if(!name || !phone || !address){ status.textContent='Completează nume, telefon și adresă.'; status.style.color='#b00020'; return; }
+  status.textContent='Pregătesc trimiterea...'; status.style.color='#666';
+  const moneyF = x => (Math.round(x*100)/100).toFixed(2).replace('.00','') + ' lei';
+  const subtotal = cart.reduce((s,x)=>s+x.price*x.qty,0);
+  const rowsHtml = cart.map(x=>`<tr><td style=\"padding:8px 10px; border-bottom:1px solid #eee;\">${x.name}</td><td style=\"padding:8px 10px; text-align:center; border-bottom:1px solid #eee;\">${x.qty}</td><td style=\"padding:8px 10px; text-align:right; border-bottom:1px solid #eee;\">${moneyF(x.price)}</td><td style=\"padding:8px 10px; text-align:right; border-bottom:1px solid #eee;\">${moneyF(x.price*x.qty)}</td></tr>`).join('');
+  const tableHtml = `<table style=\"border-collapse:collapse; width:100%; max-width:560px;\"><thead><tr><th style=\"text-align:left;  padding:8px 10px; border-bottom:2px solid #ddd;\">Produs</th><th style=\"text-align:center;padding:8px 10px; border-bottom:2px solid #ddd;\">Cant.</th><th style=\"text-align:right; padding:8px 10px; border-bottom:2px solid #ddd;\">Preț</th><th style=\"text-align:right; padding:8px 10px; border-bottom:2px solid #ddd;\">Subtotal</th></tr></thead><tbody>${rowsHtml}</tbody></table>`;
+  // Trimitere prin funcția Netlify + Resend
+  const CFG = (window.APP_CONFIG||{});
+  const to = (CFG.ORDER_EMAIL_TO||"");
+  const from = (CFG.ORDER_EMAIL_FROM||"Store <onboarding@resend.dev>");
+  const subject = `Comandă nouă — ${name}`;
+  const html = `
+    <div style="font-family:Arial, sans-serif; color:#222">
+      <h3>Comandă nouă</h3>
+      <p><strong>Nume:</strong> ${name}<br/>
+         <strong>Firmă:</strong> ${company||'-'}<br/>
+         <strong>Telefon:</strong> ${phone}<br/>
+         <strong>Adresă:</strong> ${address}</p>
+      ${tableHtml}
+      <p><strong>Total:</strong> ${moneyF(subtotal)}</p>
+    </div>`;
+  try{
+    const resp = await fetch('/.netlify/functions/send-order', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ to, from, subject, html })
+    });
+    if(!resp.ok) throw new Error(await resp.text());
+    status.textContent='Comanda a fost trimisă!'; status.style.color='#1a7f37';
+  }catch(_){ status.textContent='Eroare la trimitere. Te rugăm încearcă din nou.'; status.style.color='#b00020'; }
+}
+
+// Wire
+// Persistență câmpuri checkout
+const LS_CHECKOUT='fsb_checkout';
+function loadCheckout(){
+  try{ const data=JSON.parse(localStorage.getItem(LS_CHECKOUT)||'{}');
+    if(data.name) document.getElementById('checkoutName').value=data.name;
+    if(data.company) document.getElementById('checkoutCompany').value=data.company;
+    if(data.phone) document.getElementById('checkoutPhone').value=data.phone;
+    if(data.address) document.getElementById('checkoutAddress').value=data.address;
+  }catch(_){/* no-op */}
+}
+function saveCheckout(){
+  const data={
+    name: document.getElementById('checkoutName').value,
+    company: document.getElementById('checkoutCompany').value,
+    phone: document.getElementById('checkoutPhone').value,
+    address: document.getElementById('checkoutAddress').value
+  };
+  localStorage.setItem(LS_CHECKOUT, JSON.stringify(data));
+}
+['checkoutName','checkoutCompany','checkoutPhone','checkoutAddress'].forEach(id=>{
+  const el=document.getElementById(id); if(el) el.addEventListener('input', saveCheckout);
+});
+
+loadCheckout();
+renderCart();
+$('#emailBtn').onclick = sendOrderViaEmailJS;
+$('#closeBtn').onclick = ()=> window.close();
+</script>
+</body>
+</html>
